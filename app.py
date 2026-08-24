@@ -7,6 +7,7 @@ Usage :
 """
 
 import io
+import os
 from pathlib import Path
 
 import numpy as np
@@ -14,12 +15,21 @@ import streamlit as st
 
 from serving import load_input_image, load_model as _load_model, predict as _predict
 
-CHECKPOINT_PATH = "checkpoints/best_model.pt"
+LOCAL_CHECKPOINT_PATH = "checkpoints/best_model.pt"
+
+# Sur Hugging Face Spaces, le checkpoint n'est pas embarqué dans le Space :
+# il est téléchargé depuis le repo modèle au démarrage.
+HF_MODEL_REPO = os.environ.get("HF_MODEL_REPO", "tiavinaonja/star")
+HF_MODEL_FILENAME = os.environ.get("HF_MODEL_FILENAME", "best_model.pt")
 
 
 @st.cache_resource
 def load_model():
-    return _load_model(CHECKPOINT_PATH)
+    checkpoint_path = LOCAL_CHECKPOINT_PATH
+    if not Path(checkpoint_path).exists():
+        from huggingface_hub import hf_hub_download
+        checkpoint_path = hf_hub_download(repo_id=HF_MODEL_REPO, filename=HF_MODEL_FILENAME)
+    return _load_model(checkpoint_path)
 
 
 def to_rgb_preview(image):
@@ -52,11 +62,11 @@ st.caption(
     "ou un tableau .npy déjà au bon format, pour tester le modèle U-Net entraîné."
 )
 
-if not Path(CHECKPOINT_PATH).exists():
-    st.error(f"Checkpoint introuvable : {CHECKPOINT_PATH}")
+try:
+    model, cfg, checkpoint, device = load_model()
+except Exception as e:
+    st.error(f"Impossible de charger le modèle : {e}")
     st.stop()
-
-model, cfg, checkpoint, device = load_model()
 
 with st.sidebar:
     st.subheader("Modèle")
