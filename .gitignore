@@ -1,0 +1,17 @@
+# Environnement virtuel
+.venv/
+
+# Bytecode Python
+__pycache__/
+*.pyc
+
+# Données (trop volumineuses pour git — voir data/download_data.py et
+# data/fetch_gee_aoi.py pour les régénérer)
+data/AI4Boundaries/
+data/synthetic/
+
+# OS
+.DS_Store
+
+# État local des outils (Claude Code, etc.)
+.claude/

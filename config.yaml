@@ -1,0 +1,152 @@
+# ============================================================
+# Configuration - AI4Boundaries
+# Segmentation de parcelles agricoles
+# ============================================================
+
+data:
+  # Dataset déjà séparé en train / val / test
+  data_dir: "data/AI4Boundaries"
+
+  # Taille spatiale des patches
+  patch_size: 256
+
+  # 5 variables × 6 dates = 30 canaux
+  #
+  # B2  : 6 dates
+  # B3  : 6 dates
+  # B4  : 6 dates
+  # B8  : 6 dates
+  # NDVI: 6 dates
+  #
+  # Total = 30
+  n_bands: 30
+
+  # Segmentation binaire :
+  # 0 = non-parcelle
+  # 1 = parcelle
+  n_classes: 1
+
+  # ----------------------------------------------------------
+  # Ces paramètres ne sont PAS utilisés pour AI4Boundaries.
+  # Le dataset possède déjà :
+  #
+  # train/
+  # val/
+  # test/
+  #
+  # Ils sont conservés uniquement pour compatibilité
+  # avec le reste du projet.
+  # ----------------------------------------------------------
+  val_split: 0.15
+  test_split: 0.10
+
+  # ----------------------------------------------------------
+  # DataLoader
+  # ----------------------------------------------------------
+  #
+  # CPU : 4 est un bon compromis.
+  # Si la RAM est limitée, utiliser 2.
+  #
+  batch_size: 4
+
+  # Pour ton entraînement CPU, 2 peut fonctionner.
+  # Si tu rencontres des problèmes de RAM/processus,
+  # mettre 0.
+  num_workers: 2
+
+
+# ============================================================
+# MODÈLE
+# ============================================================
+
+model:
+  name: "unet"
+
+  # Nombre de canaux dans la première couche
+  base_channels: 32
+
+  # Nombre de niveaux d'encodage/décodage
+  depth: 4
+
+  # Dropout pour limiter le surapprentissage
+  dropout: 0.1
+
+
+# ============================================================
+# ENTRAÎNEMENT
+# ============================================================
+
+training:
+
+  # Nombre maximum d'époques
+  epochs: 100
+
+  # Learning rate
+  learning_rate: 0.0003
+
+  # Régularisation AdamW
+  weight_decay: 0.00001
+
+  # Optimiseur
+  optimizer: "adamw"
+
+  # Scheduler :
+  # cosine | plateau | none
+  scheduler: "cosine"
+
+  # Fonction de perte :
+  # bce_dice | dice | focal
+  #
+  # BCE + Dice est adaptée à la segmentation binaire.
+  loss: "bce_dice"
+
+  # Arrêt si aucune amélioration
+  # pendant 15 époques.
+  early_stopping_patience: 15
+
+  # Reproductibilité
+  seed: 42
+
+
+# ============================================================
+# AUGMENTATION DES DONNÉES
+# ============================================================
+
+augmentation:
+
+  # Retournement horizontal
+  horizontal_flip: 0.5
+
+  # Retournement vertical
+  vertical_flip: 0.5
+
+  # Rotation de 90°
+  rotate90: 0.5
+
+  # ----------------------------------------------------------
+  # Désactivés volontairement.
+  #
+  # Les données contiennent plusieurs bandes Sentinel-2
+  # et le NDVI. Une modification arbitraire de luminosité
+  # ou de contraste pourrait modifier la signification
+  # physique des données.
+  # ----------------------------------------------------------
+
+  brightness_contrast: 0.0
+  gaussian_noise: 0.0
+
+
+# ============================================================
+# CHEMINS DE SORTIE
+# ============================================================
+
+paths:
+
+  # Meilleur modèle
+  checkpoint_dir: "checkpoints"
+
+  # Prédictions et graphiques
+  output_dir: "outputs"
+
+  # Historique d'entraînement
+  log_file: "outputs/training_log.csv"
